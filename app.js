@@ -3,56 +3,26 @@
 const express = require('express');
 const app = express();
 const morgan = require('morgan');
-const { items } = require('./fakeDb');
 
+const itemsRoutes = require("./routes/items")
+const { NotFoundError } = require("./expressError")
 
 app.use(express.json());
 app.use(morgan('dev'));
+app.use("/items", itemsRoutes)
 
-
-app.get('/items', function (req, res) {
-
-  return res.json({ items: items });
-
-  //items [{name: popsickles, price: 1.35}, {name: cherios, price: 3.40}]
+/** 404 handler: matches unmatched routes; raises NotFoundError. */
+app.use(function (req, res, next) {
+  throw new NotFoundError();
 });
 
-app.post('/items', function (req, res) {
-  if (req.body === undefined) throw new Error("bad request");
-  const item = { name: req.body.name, price: req.body.price };
-  console.log(item);
-  items.push(item);
-
-  return res.json({ added: item });
+/** Error handler: logs stacktrace and returns JSON error message. */
+app.use(function (err, req, res, next) {
+  const status = err.status || 500;
+  const message = err.message;
+  if (process.env.NODE_ENV !== "test") console.error(status, err.stack);
+  return res.status(status).json({ error: { message, status } });
 });
-
-app.get("/items/:name", function (req, res) {
-  const item = items.filter(item => item.name === req.params.name);
-  return res.json(item);
-});
-
-app.patch("/items/:name", function (req, res) {
-  const item = items.filter(item => item.name === req.params.name);
-  item[0].name = req.body.name;
-  item[0].price = req.body.price;
-
-  const updatedItem = { name: item[0].name, price: item[0].price };
-  return res.json({ updated: updatedItem });
-});
-
-
-app.delete('/items/:name', function (req, res) {
-  for (let i = 0; i < items.length; i++) {
-    if (items[i].name === req.params.name) {
-      items.splice(i, 1);
-      break;
-    }
-  }
-
-  return res.json({ message: 'Deleted' });
-
-});
-
 
 module.exports = app;
 
