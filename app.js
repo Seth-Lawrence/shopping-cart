@@ -1,3 +1,5 @@
+"use strict";
+
 const express = require('express');
 const app = express();
 const morgan = require('morgan');
@@ -21,22 +23,35 @@ app.post('/items', function (req, res) {
   console.log(item);
   items.push(item);
 
-  return res.json({added : item})
+  return res.json({ added: item });
 });
 
-app.get("/items/:name", function(req, res){
-  const matchName = items.filter(item => item.name === req.params.name)
-  return res.json(matchName)
-})
+app.get("/items/:name", function (req, res) {
+  const item = items.filter(item => item.name === req.params.name);
+  return res.json(item);
+});
 
-app.patch("/items/:name", function(req, res){
-  const item = items.filter(item => item.name === req.params.name)
-  item[0].name = req.body.name
-  item[0].price = req.body.price
+app.patch("/items/:name", function (req, res) {
+  const item = items.filter(item => item.name === req.params.name);
+  item[0].name = req.body.name;
+  item[0].price = req.body.price;
 
-  const updatedItem = {name: item[0].name, price : item[0].price}
-  return res.json({updated: updatedItem})
-})
+  const updatedItem = { name: item[0].name, price: item[0].price };
+  return res.json({ updated: updatedItem });
+});
+
+
+app.delete('/items/:name', function (req, res) {
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].name === req.params.name) {
+      items.splice(i, 1);
+      break;
+    }
+  }
+
+  return res.json({ message: 'Deleted' });
+
+});
 
 
 module.exports = app;
